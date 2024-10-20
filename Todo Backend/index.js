@@ -44,8 +44,10 @@ app.post("/signin", async function(req, res){
     if(user){
 
         const token = jwt.sign({
-            id: user._id
+            id: user._id.toString()
         },JWT_SECRET);
+
+
         res.json({
             token: token
         });
@@ -57,12 +59,50 @@ app.post("/signin", async function(req, res){
     }
 });
 
-app.post("/todo", function(req, res){
+function auth(req, res, next){
+    const token = req.headers.token;
+
+    const decodeddata = jwt.verify(token, JWT_SECRET);
+
+    if(decodeddata){
+        req.userid = decodeddata.id;
+        next();
+    }
+    else{
+        res.status(403).json({
+            message: "Incorrect Credentials"
+        });
+    }
+}
+
+
+app.post("/todo", auth, function(req, res){
+
+    const userid = req.userid;
+    const title = req.body.title;
+
+    todomodel.create({
+        title,
+        userid
+    });
+
+    res.json({
+        message: "todo created"
+    });
     
 });
 
-app.get("/todos", function(req, res){
-    
+app.get("/todos", auth, async function(req, res){
+
+    const userid = req.userid;
+    const todos = await todomodel.find({
+        userid: userid
+    })
+
+    res.json({
+        message: "reached here",
+        userid: userid
+    })
 });
 
 
