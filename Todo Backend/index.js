@@ -1,3 +1,6 @@
+require('dotenv').config();
+
+
 const express = require("express");
 const {usermodel, todomodel} = require("./db");
 const mongoose = require("mongoose");
@@ -8,7 +11,7 @@ const JWT_SECRET = "Hellousertodos";
 
 
 
-mongoose.connect("mongodb+srv://mohfazam:wPlvY91k1HgmrD13@cluster0.f8f0e.mongodb.net/todo-sarwar-2")
+mongoose.connect(process.env.MONGO_URI);
 
 const app = express();
 
