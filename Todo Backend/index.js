@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-
+const bcrypt = require("bcrypt");
 const express = require("express");
 const {usermodel, todomodel} = require("./db");
 const mongoose = require("mongoose");
@@ -23,15 +23,32 @@ app.post("/signup", async function(req, res){
     const password = req.body.password;
     const name = req.body.name;
 
+    let errorthrown = false;
+
+    try{
+    const hashedpassword = await bcrypt.hash(password, 5);
+    console.log(hashedpassword);
+
     await usermodel.create({
         email: email,
-        password: password,
+        password: hashedpassword,
         name: name
     });
+    } catch(e){
+        res.json({
+            message: "User Already Exists"
+        });
+        errorthrown = true;
+        
+    }
 
-    res.json({
-        message: "Your are Signed Up"
-    });
+    if(!errorthrown){
+        res.json({
+            message: "Your are Signed Up"
+        });
+    }
+
+    
 
 });
 
@@ -39,12 +56,19 @@ app.post("/signin", async function(req, res){
     const email = req.body.email;
     const password = req.body.password;
 
-    const user = await usermodel.findOne({
-        email: email,
-        password: password
+    const response = await usermodel.findOne({
+        email: email
     });
 
-    if(user){
+    if(!response){
+        res.status(403).json({
+            message: "User does not exist in our database"
+        });
+    }
+
+    const passwordmatch = await bcrypt.compare(password, response.password);
+
+    if(passwordmatch){
 
         const token = jwt.sign({
             id: user._id.toString()
