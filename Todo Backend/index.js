@@ -5,6 +5,9 @@ const express = require("express");
 const {usermodel, todomodel} = require("./db");
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
+const { z } = require("zod");
+// const  z  = require("zod");
+
 
 
 const JWT_SECRET = "Hellousertodos";
@@ -18,6 +21,21 @@ const app = express();
 app.use(express.json());
 
 app.post("/signup", async function(req, res){
+
+    const requiredbody = z.object({
+        email: z.string().min(3).max(100).email(),
+        name: z.string().min(3).max(100),
+        password: z.string().min(3).max(100)
+    });
+
+    // const parseddata = requiredbody.parse(req.body);
+    const parseddatawithsuccess = requiredbody.safeParse(req.body);
+
+    if(!parseddatawithsuccess.success){
+        res.json({
+            message:"Incorrect Format"
+        });
+    }
 
     const email = req.body.email;
     const password = req.body.password;
